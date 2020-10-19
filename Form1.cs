@@ -39,7 +39,7 @@ namespace signalrClient
         }
 
        
-        List<Button> tanks = new List<Button>();
+       readonly List<Button> tanks = new List<Button>();
         private async void Form1_Load(object sender, EventArgs e)
         {
             OutputBox.Text += "Starting connection..\n";
