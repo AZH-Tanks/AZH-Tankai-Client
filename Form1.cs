@@ -14,7 +14,7 @@ namespace signalrClient
 {
     public partial class Form1 : Form
     {
-     
+
         const int speed = 5;
         string currentUser = null;
         HubConnection connection;
@@ -37,9 +37,7 @@ namespace signalrClient
             };
 
         }
-
-       
-       readonly List<Button> tanks = new List<Button>();
+        readonly IDictionary<string, Button> tanks = new Dictionary<string, Button>();
         private async void Form1_Load(object sender, EventArgs e)
         {
             OutputBox.Text += "Starting connection..\n";
@@ -50,7 +48,7 @@ namespace signalrClient
             {
                 this.BeginInvoke((Action)(() =>
                 {               
-                       tanks.Where(x=>x.Text == user).FirstOrDefault().Location = new Point(x, y);                  
+                       tanks[user].Location = new Point(x, y);                  
                 }));
             });
 
@@ -67,7 +65,7 @@ namespace signalrClient
                     tank.Location = new Point(500, 200);
                     tank.Enabled = false;
                     this.Controls.Add(tank);
-                    tanks.Add(tank);
+                    tanks.Add(user, tank);
                 }));
                
             });
@@ -85,9 +83,9 @@ namespace signalrClient
                 this.BeginInvoke((Action)(() =>
                 {
                     OutputBox.Text += $"{user} disconnected!\n";
-                    Button tank = tanks.Where(x => x.Text == user).First();
+                    Button tank = tanks[user];
                     this.Controls.Remove(tank);
-                    tanks.Remove(tank);
+                    tanks.Remove(user);
                 
                 }));
             });
@@ -104,7 +102,7 @@ namespace signalrClient
         {
             if (currentUser != null)
             {
-                Button tank = tanks.Where(x => x.Text == currentUser).First();
+                Button tank = tanks[currentUser];
                 int x = tank.Location.X;
                 int y = tank.Location.Y;
 
