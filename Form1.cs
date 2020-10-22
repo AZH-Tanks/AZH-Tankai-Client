@@ -26,7 +26,7 @@ namespace signalrClient
             this.KeyPreview = true;
 
             connection = new HubConnectionBuilder()
-              .WithUrl("https://localhost:44308/ControlHub")
+              .WithUrl("https://azh-tanks.azurewebsites.net/ControlHub")
               .Build();
 
             connection.Closed += async (error) =>
