@@ -14,8 +14,8 @@ namespace signalrClient
 {
     public partial class Form1 : Form
     {
-
-        const int speed = 5;
+        readonly IDictionary<string, Button> tanks = new Dictionary<string, Button>();
+        const int speed = 15;
         string currentUser = null;
         HubConnection connection;
         public Form1()
@@ -26,7 +26,7 @@ namespace signalrClient
             this.KeyPreview = true;
 
             connection = new HubConnectionBuilder()
-              .WithUrl("https://azh-tanks.azurewebsites.net/ControlHub")
+              .WithUrl("https://localhost:44308/ControlHub")
               .Build();
 
             connection.Closed += async (error) =>
@@ -37,37 +37,33 @@ namespace signalrClient
             };
 
         }
-        readonly IDictionary<string, Button> tanks = new Dictionary<string, Button>();
+
         private async void Form1_Load(object sender, EventArgs e)
         {
             OutputBox.Text += "Starting connection..\n";
             await connection.StartAsync();
             OutputBox.Text += "Connection started!\n";
 
-            connection.On<string, int, int>("ReceiveCoordinate", (user, x, y) =>
-            {
-                this.BeginInvoke((Action)(() =>
-                {               
-                       tanks[user].Location = new Point(x, y);                  
-                }));
-            });
-
             connection.On<string>("ReceiveUser", (user) =>
             {
                 this.BeginInvoke((Action)(() =>
                 {
-                    Button tank = new Button();
-                    OutputBox.Text += $"{user} joined!\n";
-                    tank.BackColor = Color.FromArgb(new Random().Next(1, 255), new Random().Next(1, 255), new Random().Next(1, 255));
-                    tank.Text = user;
-                    tank.Width = 30;
-                    tank.Height = 30;
-                    tank.Location = new Point(500, 200);
-                    tank.Enabled = false;
-                    this.Controls.Add(tank);
-                    tanks.Add(user, tank);
+                    CreatePlayer(user);
                 }));
-               
+
+            });
+
+
+            connection.On<string, int, int>("ReceiveCoordinate", (user, x, y) =>
+            {
+                this.BeginInvoke((Action)(() =>
+                {
+                    if (!tanks.ContainsKey(user))
+                    {
+                        CreatePlayer(user);
+                    }
+                    tanks[user].Location = new Point(x, y);
+                }));
             });
 
             connection.On<string>("PlayerExists", (user) =>
@@ -86,7 +82,7 @@ namespace signalrClient
                     Button tank = tanks[user];
                     this.Controls.Remove(tank);
                     tanks.Remove(user);
-                
+
                 }));
             });
 
@@ -133,6 +129,20 @@ namespace signalrClient
             }
         }
 
+
+        private void CreatePlayer(string user)
+        {
+            Button tank = new Button();
+            OutputBox.Text += $"{user} joined!\n";
+            tank.BackColor = Color.FromArgb(new Random().Next(1, 255), new Random().Next(1, 255), new Random().Next(1, 255));
+            tank.Text = user;
+            tank.Width = 30;
+            tank.Height = 30;
+            tank.Location = new Point(500, 200);
+            tank.Enabled = false;
+            this.Controls.Add(tank);
+            tanks.Add(user, tank);
+        }
 
     }
 
