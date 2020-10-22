@@ -14,7 +14,8 @@ namespace signalrClient
 {
     public partial class Form1 : Form
     {
-        const int speed = 5;
+        readonly IDictionary<string, Button> tanks = new Dictionary<string, Button>();
+        const int speed = 15;
         string currentUser = null;
         HubConnection connection;
         public Form1()
@@ -25,7 +26,7 @@ namespace signalrClient
             this.KeyPreview = true;
 
             connection = new HubConnectionBuilder()
-              .WithUrl("https://localhost:44308/ControlHub")
+              .WithUrl("https://azh-tanks.azurewebsites.net/ControlHub")
               .Build();
 
             connection.Closed += async (error) =>
@@ -37,47 +38,67 @@ namespace signalrClient
 
         }
 
-        Button tank = new Button();
-
         private async void Form1_Load(object sender, EventArgs e)
         {
             OutputBox.Text += "Starting connection..\n";
             await connection.StartAsync();
             OutputBox.Text += "Connection started!\n";
 
-            connection.On<string, int, int>("ReceiveCoordinate", (user, x, y) =>
-            {
-                this.BeginInvoke((Action)(() =>
-                {
-                    tank.Location = new Point(x, y);
-                }));
-            });
-
             connection.On<string>("ReceiveUser", (user) =>
             {
                 this.BeginInvoke((Action)(() =>
                 {
-                    currentUser = user;
-                    OutputBox.Text += $"{user} joined!\n";
-                    tank.BackColor = Color.FromArgb(new Random().Next(1, 255), new Random().Next(1, 255), new Random().Next(1, 255));
-                    tank.Width = 30;
-                    tank.Height = 30;
-                    tank.Location = new Point(500, 200);
-                    tank.Enabled = false;
-                    this.Controls.Add(tank);
+                    CreatePlayer(user);
+                }));
+
+            });
+
+
+            connection.On<string, int, int>("ReceiveCoordinate", (user, x, y) =>
+            {
+                this.BeginInvoke((Action)(() =>
+                {
+                    if (!tanks.ContainsKey(user))
+                    {
+                        CreatePlayer(user);
+                    }
+                    tanks[user].Location = new Point(x, y);
                 }));
             });
+
+            connection.On<string>("PlayerExists", (user) =>
+            {
+                this.BeginInvoke((Action)(() =>
+                {
+                    OutputBox.Text += $"Name {user} is currently taken!\n";
+                }));
+            });
+
+            connection.On<string>("TerminatePlayer", (user) =>
+            {
+                this.BeginInvoke((Action)(() =>
+                {
+                    OutputBox.Text += $"{user} disconnected!\n";
+                    Button tank = tanks[user];
+                    this.Controls.Remove(tank);
+                    tanks.Remove(user);
+
+                }));
+            });
+
         }
 
         private async void CreatePlayerButton_Click(object sender, EventArgs e)
         {
-            await connection.InvokeAsync("SendPlayer", username.Text);
+            currentUser = username.Text;
+            await connection.InvokeAsync("SendPlayer", username.Text, connection.ConnectionId);
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
             if (currentUser != null)
             {
+                Button tank = tanks[currentUser];
                 int x = tank.Location.X;
                 int y = tank.Location.Y;
 
@@ -103,10 +124,25 @@ namespace signalrClient
                     tank.Location = new Point(x, y);
                     OutputBox.Text += $"X:{x}, Y:{y}\n";
                     connection.InvokeAsync("SendCoordinate", username.Text, x, y);
+
                 }
             }
         }
 
+
+        private void CreatePlayer(string user)
+        {
+            Button tank = new Button();
+            OutputBox.Text += $"{user} joined!\n";
+            tank.BackColor = Color.FromArgb(new Random().Next(1, 255), new Random().Next(1, 255), new Random().Next(1, 255));
+            tank.Text = user;
+            tank.Width = 30;
+            tank.Height = 30;
+            tank.Location = new Point(500, 200);
+            tank.Enabled = false;
+            this.Controls.Add(tank);
+            tanks.Add(user, tank);
+        }
 
     }
 
