@@ -113,34 +113,38 @@ namespace signalrClient
         {
             if (currentUser != null)
             {
-                Button tank = tanks[currentUser];
-                int x = tank.Location.X;
-                int y = tank.Location.Y;
+                HandleMovement(sender, e);
+            }
+        }
 
-                if (e.KeyCode == Keys.D || e.KeyCode == Keys.Right)
-                {
-                    x += speed;
-                }
-                else if (e.KeyCode == Keys.A || e.KeyCode == Keys.Left)
-                {
-                    x -= speed;
-                }
-                else if (e.KeyCode == Keys.W || e.KeyCode == Keys.Up)
-                {
-                    y -= speed;
-                }
-                else if (e.KeyCode == Keys.S || e.KeyCode == Keys.Down)
-                {
-                    y += speed;
-                }
+        private void HandleMovement(object sender, KeyEventArgs e)
+        {
+            Button tank = tanks[currentUser];
+            int x = tank.Location.X;
+            int y = tank.Location.Y;
 
-                if (tank.Location.X != x || tank.Location.Y != y)
-                {
-                    tank.Location = new Point(x, y);
-                    OutputBox.Text += $"X:{x}, Y:{y}\n";
-                    connection.InvokeAsync("SendCoordinate", username.Text, x, y);
+            if (e.KeyCode == Keys.D || e.KeyCode == Keys.Right)
+            {
+                x += speed;
+            }
+            else if (e.KeyCode == Keys.A || e.KeyCode == Keys.Left)
+            {
+                x -= speed;
+            }
+            else if (e.KeyCode == Keys.W || e.KeyCode == Keys.Up)
+            {
+                y -= speed;
+            }
+            else if (e.KeyCode == Keys.S || e.KeyCode == Keys.Down)
+            {
+                y += speed;
+            }
 
-                }
+            if (tank.Location.X != x || tank.Location.Y != y)
+            {
+                tank.Location = new Point(x, y);
+                OutputBox.Text += $"X:{x}, Y:{y}\n";
+                connection.InvokeAsync("SendCoordinate", username.Text, x, y);
             }
         }
 
