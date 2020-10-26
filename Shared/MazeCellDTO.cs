@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace AZH_Tankai_Shared
 {

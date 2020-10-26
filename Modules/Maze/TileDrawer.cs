@@ -1,7 +1,6 @@
 ﻿using AZH_Tankai_Shared;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Windows.Forms;
 
 namespace AZH_Tankai_Client.Modules.Maze
 {
