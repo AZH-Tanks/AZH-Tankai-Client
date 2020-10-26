@@ -14,8 +14,8 @@ namespace AZH_Tankai_Client.Modules.Maze
     }
     class WallDrawer
     {
-        private Graphics graphics;
-        private Pen pen;
+        private readonly Graphics graphics;
+        private readonly Pen pen;
         public Point TopLeftCorner { get; set; }
         public Size TileSize { get; set; }
 

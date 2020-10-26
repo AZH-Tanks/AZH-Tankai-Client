@@ -8,7 +8,7 @@ namespace AZH_Tankai_Client.Modules.Maze
     class TileDrawer
     {
         // TODO: Redesign tiles
-        private static readonly Dictionary<TileType, string> tileDictionary = new Dictionary<TileType, string>(){
+        private static readonly Dictionary<TileType, string> tileDictionary = new Dictionary<TileType, string>{
             { TileType.MudRoadTile, "Images/MudRoad.png" },
             { TileType.PavedRoadTile, "Images/PavedRoad.png" },
             { TileType.QuicksandTile, "Images/QuickSand.png" },
@@ -20,7 +20,7 @@ namespace AZH_Tankai_Client.Modules.Maze
         public Point TopLeftCorner { get; set; }
         public Size TileSize { get; set; }
 
-        private Graphics graphics { get; set; }
+        private readonly Graphics graphics;
 
         public TileDrawer(Graphics graphics, Point topLeftCorner, Size tileSize)
         {
@@ -37,7 +37,6 @@ namespace AZH_Tankai_Client.Modules.Maze
 
         public void DrawTiles(List<List<MazeCellDTO>> tiles)
         {
-            List<PictureBox> tileGrid = new List<PictureBox>();
             for (int i = 0; i < tiles.Count; i++)
             {
                 List<MazeCellDTO> tileRow = tiles[i];
