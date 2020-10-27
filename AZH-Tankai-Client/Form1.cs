@@ -223,7 +223,7 @@ namespace signalrClient
             bullets.ForEach((bullet) =>
             {
                 e.Graphics.FillEllipse(myBrush, new Rectangle(bullet.X, bullet.Y, 8, 8));
-                
+
             });
             myBrush.Dispose();
         }
