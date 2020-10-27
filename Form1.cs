@@ -111,10 +111,7 @@ namespace signalrClient
             if (currentUser != null)
             {
                 HandleMovement(sender, e);
-<<<<<<< Updated upstream
-=======
                 HandleFiring(sender, e);
->>>>>>> Stashed changes
             }
         }
 
@@ -197,7 +194,7 @@ namespace signalrClient
             bullets.ForEach((bullet) =>
             {
                 e.Graphics.FillEllipse(myBrush, new Rectangle(bullet.X, bullet.Y, 8, 8));
-                
+
             });
             myBrush.Dispose();
         }
