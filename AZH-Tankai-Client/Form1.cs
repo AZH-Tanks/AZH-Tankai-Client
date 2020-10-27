@@ -9,6 +9,9 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.Integration;
+using System.Windows;
+using Microsoft.AspNetCore.SignalR.Client;
+using System.Drawing.Drawing2D;
 
 namespace signalrClient
 {
@@ -16,6 +19,7 @@ namespace signalrClient
     public partial class Form1 : Form
     {
         readonly IDictionary<string, Button> tanks = new Dictionary<string, Button>();
+        readonly List<Point> bullets = new List<Point>();
         const int speed = 15;
         string currentUser = null;
         readonly HubConnection connection;
@@ -30,8 +34,8 @@ namespace signalrClient
             this.KeyPreview = true;
 
             connection = new HubConnectionBuilder()
-              .WithUrl("https://azh-tanks.azurewebsites.net/ControlHub")
-              //.WithUrl("https://localhost:44308/ControlHub")
+              //.WithUrl("https://azh-tanks.azurewebsites.net/ControlHub")
+              .WithUrl("http://localhost:5000/ControlHub")
               .Build();
 
             connection.Closed += async (error) =>
@@ -68,6 +72,15 @@ namespace signalrClient
                         CreatePlayer(user);
                     }
                     tanks[user].Location = new Point(x, y);
+                }));
+            });
+
+            connection.On<string, int, int>("ReceiveBulletCoordinate", (user, x, y) =>
+            {
+                this.BeginInvoke((Action)(() =>
+                {
+                    CreateBullet(user, x, y);
+                    bullets.Add(new Point(x, y));
                 }));
             });
 
@@ -114,6 +127,7 @@ namespace signalrClient
             if (currentUser != null)
             {
                 HandleMovement(sender, e);
+                HandleFiring(sender, e);
             }
         }
 
@@ -148,6 +162,16 @@ namespace signalrClient
             }
         }
 
+        private void HandleFiring(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Space || e.KeyCode == Keys.F)
+            {
+                Button tank = tanks[currentUser];
+                int x = tank.Location.X;
+                int y = tank.Location.Y;
+                connection.InvokeAsync("SendFireBullet", username.Text, x, y);
+            }
+        }
 
         private void CreatePlayer(string user)
         {
@@ -176,6 +200,32 @@ namespace signalrClient
             window.Show();
             test = new TestDrawer(window.Drawer, this);
         }
-    }
+        private void CreateBullet(string user, int x, int y)
+        {
+            Button bullet = new Button();
+            OutputBox.Text += $"{user} Fired a bullet\n";
+            bullet.BackColor = Color.Black;
+            bullet.Text = user;
+            bullet.Width = 10;
+            bullet.Height = 10;
+            bullet.Location = new Point(x, y);
+            bullet.Enabled = false;
+            //  System.Drawing.SolidBrush myBrush = new System.Drawing.SolidBrush(System.Drawing.Color.Red);
+            //     CreateGraphics().FillRectangle(myBrush, new Rectangle(x, y, 10, 10));
+            //      this.Controls.Add(bullet);
+            this.Invalidate();
+        }
 
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            SolidBrush myBrush = new SolidBrush(System.Drawing.Color.Black);
+            bullets.ForEach((bullet) =>
+            {
+                e.Graphics.FillEllipse(myBrush, new Rectangle(bullet.X, bullet.Y, 8, 8));
+                
+            });
+            myBrush.Dispose();
+        }
+    }
 }
