@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using System.Windows;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Drawing.Drawing2D;
+using System.Threading;
 
 namespace signalrClient
 {
@@ -17,6 +18,8 @@ namespace signalrClient
     {
         readonly IDictionary<string, Button> tanks = new Dictionary<string, Button>();
         readonly List<Point> bullets = new List<Point>();
+        readonly List<Point> lasers = new List<Point>();
+        readonly List<Point> shrapnels = new List<Point>();
         const int speed = 15;
         string currentUser = null;
         HubConnection connection;
@@ -39,6 +42,48 @@ namespace signalrClient
                 OutputBox.Text += error.Message + "\n";
             };
 
+            //create and start a new thread in the load event.
+            //passing it a method to be run on the new thread.
+            Thread t = new System.Threading.Thread(DoThisAllTheTime);
+            t.Start();
+        }
+
+        public void DoThisAllTheTime()
+        {
+            while (true)
+            {
+                Thread.Sleep(50);
+                //you need to use Invoke because the new thread can't access the UI elements directly
+                MethodInvoker mi = delegate ()
+                {
+                    List<Point> updatedBullets = bullets.Select(bullet =>
+                    {
+                        bullet.X += 20;
+                        return bullet;
+                    }).ToList();
+                    bullets.Clear();
+                    bullets.AddRange(updatedBullets);
+
+                    List<Point> updatedLasers = lasers.Select(laser =>
+                    {
+                        laser.X += 40;
+                        return laser;
+                    }).ToList();
+                    lasers.Clear();
+                    lasers.AddRange(updatedLasers);
+
+                    List<Point> updatedShrapnels = shrapnels.Select(shrapnel =>
+                    {
+                        shrapnel.X += 30;
+                        return shrapnel;
+                    }).ToList();
+                    shrapnels.Clear();
+                    shrapnels.AddRange(updatedShrapnels);
+
+                    Refresh();
+                };
+                this.Invoke(mi);
+            }
         }
 
         private async void Form1_Load(object sender, EventArgs e)
@@ -69,12 +114,30 @@ namespace signalrClient
                 }));
             });
 
-            connection.On<string, int, int>("ReceiveBulletCoordinate", (user, x, y) =>
+            connection.On<string, int, int>("ReceiveLaserCoordinate", (user, x, y) =>
             {
                 this.BeginInvoke((Action)(() =>
                 {
-                    CreateBullet(user, x, y);
-                    bullets.Add(new Point(x, y));
+                    Point point = new Point(x, y);
+                    lasers.Add(point);
+                }));
+            });
+
+            connection.On<string, int, int>("ReceiveShrapnelCoordinate", (user, x, y) =>
+            {
+                this.BeginInvoke((Action)(() =>
+                {
+                    Point point = new Point(x, y);
+                    shrapnels.Add(point);
+                }));
+            });
+
+            connection.On<string, int, int>("ReceiveBasicBulletCoordinate", (user, x, y) =>
+            {
+                this.BeginInvoke((Action)(() =>
+                {
+                    Point point = new Point(x, y);
+                    bullets.Add(point);
                 }));
             });
 
@@ -97,7 +160,6 @@ namespace signalrClient
 
                 }));
             });
-
         }
 
         private async void CreatePlayerButton_Click(object sender, EventArgs e)
@@ -153,7 +215,12 @@ namespace signalrClient
                 Button tank = tanks[currentUser];
                 int x = tank.Location.X;
                 int y = tank.Location.Y;
-                connection.InvokeAsync("SendFireBullet", username.Text, x, y);
+
+                var random = new Random();
+                var list = new List<string> { "Basic", "Laser", "Shrapnel" };
+                int index = random.Next(list.Count);
+
+                connection.InvokeAsync("SendFireBullet", username.Text, list[index], x, y);
             }
         }
 
@@ -171,7 +238,7 @@ namespace signalrClient
             tanks.Add(user, tank);
         }
 
-        private void CreateBullet(string user, int x, int y)
+        private void CreateBullet(string user, string type, int x, int y)
         {
             Button bullet = new Button();
             OutputBox.Text += $"{user} Fired a bullet\n";
@@ -181,22 +248,42 @@ namespace signalrClient
             bullet.Height = 10;
             bullet.Location = new Point(x, y);
             bullet.Enabled = false;
-            //  System.Drawing.SolidBrush myBrush = new System.Drawing.SolidBrush(System.Drawing.Color.Red);
-            //     CreateGraphics().FillRectangle(myBrush, new Rectangle(x, y, 10, 10));
-            //      this.Controls.Add(bullet);
             this.Invalidate();
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
-            SolidBrush myBrush = new SolidBrush(System.Drawing.Color.Black);
+            SolidBrush bulletBrush = new SolidBrush(System.Drawing.Color.Black);
             bullets.ForEach((bullet) =>
             {
-                e.Graphics.FillEllipse(myBrush, new Rectangle(bullet.X, bullet.Y, 8, 8));
-
+                e.Graphics.FillEllipse(bulletBrush, new Rectangle(bullet.X, bullet.Y, 8, 8));
             });
-            myBrush.Dispose();
+            bulletBrush.Dispose();
+
+            Pen laserPen = new Pen(Color.Green);
+            laserPen.Width = 2;
+            lasers.ForEach((laser) =>
+            {
+                e.Graphics.DrawLine(laserPen, laser.X, laser.Y, laser.X + 30, laser.Y);
+            });
+            laserPen.Dispose();
+
+            Pen shrapnelPen = new Pen(Color.BlueViolet);
+            shrapnelPen.Width = 2;
+
+            shrapnels.ForEach((shrapnel) =>
+            {
+                PointF[] points = {
+                    new PointF(shrapnel.X, shrapnel.Y - 5f),
+                    new PointF(shrapnel.X + 5f, shrapnel.Y),
+                    new PointF(shrapnel.X, shrapnel.Y + 5f),
+                    new PointF(shrapnel.X - 5f, shrapnel.Y),
+                    new PointF(shrapnel.X, shrapnel.Y - 5f)
+                };
+                e.Graphics.DrawPolygon(shrapnelPen, points);
+            });
+            shrapnelPen.Dispose();
         }
     }
 }
