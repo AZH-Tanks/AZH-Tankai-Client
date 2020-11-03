@@ -1,4 +1,5 @@
 ﻿using AZH_Tankai_Client.Modules.Maze;
+using AZH_Tankai_Client.Modules.PowerUp;
 using AZH_Tankai_Shared;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
@@ -25,8 +26,8 @@ namespace signalrClient
             this.KeyPreview = true;
 
             connection = new HubConnectionBuilder()
-              .WithUrl("https://azh-tanks.azurewebsites.net/ControlHub")
-              //.WithUrl("https://localhost:44308/ControlHub")
+              //.WithUrl("https://azh-tanks.azurewebsites.net/ControlHub")
+              .WithUrl("https://localhost:44308/ControlHub")
               .Build();
 
             connection.Closed += async (error) =>
@@ -96,6 +97,14 @@ namespace signalrClient
                 wallDrawer.DrawWalls(cells);
             });
 
+            connection.On<string>("ReceivePowerUp", (powerUp) =>
+            {
+                Graphics graphics = this.CreateGraphics();
+                PowerUpDrawer powerUpDrawer = new PowerUpDrawer(graphics, new Point(450, 30), new Size(50, 50), new Size(30, 30));
+                powerUpDrawer.DrawPowerUp(JsonSerializer.Deserialize<PowerUpDTO>(powerUp));
+                OutputBox.Text += $"PowerUp {powerUp} generated\n";
+            });
+
         }
 
         private async void CreatePlayerButton_Click(object sender, EventArgs e)
@@ -158,6 +167,7 @@ namespace signalrClient
         {
             this.Invalidate();
             await connection.InvokeAsync("CreateMaze");
+            await connection.InvokeAsync("GeneratePowerUps");
         }
     }
 
