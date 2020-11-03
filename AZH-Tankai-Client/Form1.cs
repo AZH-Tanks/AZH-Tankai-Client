@@ -21,6 +21,8 @@ using Pen = System.Drawing.Pen;
 using SolidBrush = System.Drawing.SolidBrush;
 using Rectangle = System.Drawing.Rectangle;
 using PointF = System.Drawing.PointF;
+using AZH_Tankai_Client.Modules;
+using System.Runtime.CompilerServices;
 
 namespace signalrClient
 {
@@ -28,9 +30,10 @@ namespace signalrClient
     public partial class Form1 : Form
     {
         readonly IDictionary<string, Button> tanks = new Dictionary<string, Button>();
-        readonly List<Point> bullets = new List<Point>();
+        public readonly List<Point> bullets = new List<Point>();
         readonly List<Point> lasers = new List<Point>();
         readonly List<Point> shrapnels = new List<Point>();
+        private ConnectionAdapter connectionAdapter;
         const int speed = 15;
         string currentUser = null;
         readonly HubConnection connection;
@@ -48,12 +51,15 @@ namespace signalrClient
               .WithUrl("http://localhost:5000/ControlHub")
               .Build();
 
+            connectionAdapter = new ConnectionAdapter(this, connection);
+
             connection.Closed += async (error) =>
             {
                 await Task.Delay(new Random().Next(0, 5) * 1000);
                 await connection.StartAsync();
                 OutputBox.Text += error.Message + "\n";
             };
+
         }
 
         private async void Form1_Load(object sender, EventArgs e)
@@ -62,94 +68,71 @@ namespace signalrClient
             await connection.StartAsync();
             OutputBox.Text += "Connection started!\n";
 
-            connection.On<string>("ReceiveUser", (user) =>
+            connectionAdapter.ReceivePlayer();
+            connectionAdapter.ReceiveCoordinate();
+            connectionAdapter.ReceiveBulletCoordinates();
+            connectionAdapter.PlayerExists();
+            connectionAdapter.TerminatePlayer();
+            connectionAdapter.ReceiveMaze();
+        }
+
+        public void RemoveTank(string user)
+        {
+            OutputBox.Text += $"{user} disconnected!\n";
+            Button tank = tanks[user];
+            this.Controls.Remove(tank);
+            tanks.Remove(user);
+        }
+
+        public void UpdateBullets(List<Bullet> list)
+        {
+            List<Point> newBulletList = new List<Point>();
+            List<Point> newLaserList = new List<Point>();
+            List<Point> newShrapnelList = new List<Point>();
+            list.ForEach(bullet =>
             {
-                this.BeginInvoke((Action)(() =>
+                switch (bullet.Type)
                 {
-                    CreatePlayer(user);
-                }));
+                    case "Laser":
+                        { newLaserList.Add(bullet.Location); }
+                        break;
+                    case "Shrapnel":
+                        { newShrapnelList.Add(bullet.Location); }
+                        break;
+                    default:
+                        { newBulletList.Add(bullet.Location); }
+                        break;
+                }
             });
+            bullets.Clear();
+            bullets.AddRange(newBulletList);
 
+            lasers.Clear();
+            lasers.AddRange(newLaserList);
 
-            connection.On<string, int, int>("ReceiveCoordinate", (user, x, y) =>
+            shrapnels.Clear();
+            shrapnels.AddRange(newShrapnelList);
+
+            Invalidate();
+        }
+
+        public void PrintText(string text)
+        {
+            OutputBox.Text += text;
+        }
+
+        public void CreateTank(string user, int x, int y)
+        {
+            if (!tanks.ContainsKey(user))
             {
-                this.BeginInvoke((Action)(() =>
-                {
-                    if (!tanks.ContainsKey(user))
-                    {
-                        CreatePlayer(user);
-                    }
-                    tanks[user].Location = new System.Drawing.Point(x, y);
-                }));
-            });
-
-            connection.On<string>("ReceiveBulletCoordinates", (bulletList) =>
-            {
-                this.BeginInvoke((Action)(() =>
-                {
-                    List<Bullet> list = JsonSerializer.Deserialize<List<Bullet>>(bulletList);
-                    List<Point> newBulletList = new List<Point>();
-                    List<Point> newLaserList = new List<Point>();
-                    List<Point> newShrapnelList = new List<Point>();
-                    list.ForEach(bullet =>
-                    {
-                        switch (bullet.Type)
-                        {
-                            case "Laser": { newLaserList.Add(bullet.Location); }
-                                break;
-                            case "Shrapnel": { newShrapnelList.Add(bullet.Location); }
-                                break;
-                            default: { newBulletList.Add(bullet.Location); }
-                                break;
-                        }
-                    });
-                    bullets.Clear();
-                    bullets.AddRange(newBulletList);
-
-                    lasers.Clear();
-                    lasers.AddRange(newLaserList);
-
-                    shrapnels.Clear();
-                    shrapnels.AddRange(newShrapnelList);
-
-                    Invalidate();
-                }));
-            });
-
-            connection.On<string>("PlayerExists", (user) =>
-            {
-                this.BeginInvoke((Action)(() =>
-                {
-                    OutputBox.Text += $"Name {user} is currently taken!\n";
-                }));
-            });
-
-            connection.On<string>("TerminatePlayer", (user) =>
-            {
-                this.BeginInvoke((Action)(() =>
-                {
-                    OutputBox.Text += $"{user} disconnected!\n";
-                    Button tank = tanks[user];
-                    this.Controls.Remove(tank);
-                    tanks.Remove(user);
-
-                }));
-            });
-
-            connection.On<string>("ReceiveMaze", (maze) =>
-            {
-                Graphics graphics = this.CreateGraphics();
-<<<<<<< HEAD:AZH-Tankai-Client/Form1.cs
                 TileDrawer tileDrawer = new TileDrawer(window.Drawer, new Point(5, 5), new Size(30, 30));
                 WallDrawer wallDrawer = new WallDrawer(window.Drawer, new Point(5, 5), new Size(30, 30));
-=======
-                TileDrawer tileDrawer = new TileDrawer(graphics, new System.Drawing.Point(450, 30), new Size(50, 50));
-                WallDrawer wallDrawer = new WallDrawer(graphics, new System.Drawing.Point(450, 30), new Size(50, 50));
->>>>>>> Display bullets:Form1.cs
                 List<List<MazeCellDTO>> cells = JsonSerializer.Deserialize<List<List<MazeCellDTO>>>(maze);
                 tileDrawer.DrawTiles(cells);
                 wallDrawer.DrawWalls(cells);
-            });
+                CreatePlayer(user);
+            }
+            tanks[user].Location = new System.Drawing.Point(x, y);
         }
 
         private async void CreatePlayerButton_Click(object sender, EventArgs e)
@@ -214,7 +197,7 @@ namespace signalrClient
             }
         }
 
-        private void CreatePlayer(string user)
+        public void CreatePlayer(string user)
         {
             Button tank = new Button();
             OutputBox.Text += $"{user} joined!\n";
@@ -239,15 +222,12 @@ namespace signalrClient
             bullet.Enabled = false;
         }
 
-<<<<<<< HEAD:AZH-Tankai-Client/Form1.cs
-=======
         private async void GenerateMaze_Click(object sender, EventArgs e)
         {
             this.Invalidate();
             await connection.InvokeAsync("CreateMaze");
         }
 
->>>>>>> Display bullets:Form1.cs
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);

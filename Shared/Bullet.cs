@@ -4,7 +4,7 @@ using System.Text;
 
 namespace AZH_Tankai_Client.Shared
 {
-    class Bullet
+    public class Bullet
     {
         public string Type { get; set; }
         public Point Location { get; set; }
