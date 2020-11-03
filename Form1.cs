@@ -3,7 +3,6 @@ using AZH_Tankai_Shared;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -12,6 +11,14 @@ using Microsoft.AspNetCore.SignalR.Client;
 using System.Drawing.Drawing2D;
 using System.Threading;
 using System.Linq;
+using AZH_Tankai_Client.Shared;
+using Size = System.Drawing.Size;
+using Graphics = System.Drawing.Graphics;
+using Color = System.Drawing.Color;
+using Pen = System.Drawing.Pen;
+using SolidBrush = System.Drawing.SolidBrush;
+using Rectangle = System.Drawing.Rectangle;
+using PointF = System.Drawing.PointF;
 
 namespace signalrClient
 {
@@ -29,7 +36,6 @@ namespace signalrClient
         {
             InitializeComponent();
 
-            this.KeyDown += Form1_KeyDown;
             this.KeyPreview = true;
 
             connection = new HubConnectionBuilder()
@@ -43,49 +49,6 @@ namespace signalrClient
                 await connection.StartAsync();
                 OutputBox.Text += error.Message + "\n";
             };
-
-            //create and start a new thread in the load event.
-            //passing it a method to be run on the new thread.
-            Thread t = new System.Threading.Thread(DoThisAllTheTime);
-            t.Start();
-        }
-
-        public void DoThisAllTheTime()
-        {
-            while (true)
-            {
-                Thread.Sleep(50);
-                //you need to use Invoke because the new thread can't access the UI elements directly
-                MethodInvoker mi = delegate ()
-                {
-                    List<Point> updatedBullets = bullets.Select(bullet =>
-                    {
-                        bullet.X += 20;
-                        return bullet;
-                    }).ToList();
-                    bullets.Clear();
-                    bullets.AddRange(updatedBullets);
-
-                    List<Point> updatedLasers = lasers.Select(laser =>
-                    {
-                        laser.X += 40;
-                        return laser;
-                    }).ToList();
-                    lasers.Clear();
-                    lasers.AddRange(updatedLasers);
-
-                    List<Point> updatedShrapnels = shrapnels.Select(shrapnel =>
-                    {
-                        shrapnel.X += 30;
-                        return shrapnel;
-                    }).ToList();
-                    shrapnels.Clear();
-                    shrapnels.AddRange(updatedShrapnels);
-
-                    Refresh();
-                };
-                this.Invoke(mi);
-            }
         }
 
         private async void Form1_Load(object sender, EventArgs e)
@@ -100,7 +63,6 @@ namespace signalrClient
                 {
                     CreatePlayer(user);
                 }));
-
             });
 
 
@@ -112,34 +74,40 @@ namespace signalrClient
                     {
                         CreatePlayer(user);
                     }
-                    tanks[user].Location = new Point(x, y);
+                    tanks[user].Location = new System.Drawing.Point(x, y);
                 }));
             });
 
-            connection.On<string, int, int>("ReceiveLaserCoordinate", (user, x, y) =>
+            connection.On<string>("ReceiveBulletCoordinates", (bulletList) =>
             {
                 this.BeginInvoke((Action)(() =>
                 {
-                    Point point = new Point(x, y);
-                    lasers.Add(point);
-                }));
-            });
+                    List<Bullet> list = JsonSerializer.Deserialize<List<Bullet>>(bulletList);
+                    List<Point> newBulletList = new List<Point>();
+                    List<Point> newLaserList = new List<Point>();
+                    List<Point> newShrapnelList = new List<Point>();
+                    list.ForEach(bullet =>
+                    {
+                        switch (bullet.Type)
+                        {
+                            case "Laser": { newLaserList.Add(bullet.Location); }
+                                break;
+                            case "Shrapnel": { newShrapnelList.Add(bullet.Location); }
+                                break;
+                            default: { newBulletList.Add(bullet.Location); }
+                                break;
+                        }
+                    });
+                    bullets.Clear();
+                    bullets.AddRange(newBulletList);
 
-            connection.On<string, int, int>("ReceiveShrapnelCoordinate", (user, x, y) =>
-            {
-                this.BeginInvoke((Action)(() =>
-                {
-                    Point point = new Point(x, y);
-                    shrapnels.Add(point);
-                }));
-            });
+                    lasers.Clear();
+                    lasers.AddRange(newLaserList);
 
-            connection.On<string, int, int>("ReceiveBasicBulletCoordinate", (user, x, y) =>
-            {
-                this.BeginInvoke((Action)(() =>
-                {
-                    Point point = new Point(x, y);
-                    bullets.Add(point);
+                    shrapnels.Clear();
+                    shrapnels.AddRange(newShrapnelList);
+
+                    Invalidate();
                 }));
             });
 
@@ -166,13 +134,12 @@ namespace signalrClient
             connection.On<string>("ReceiveMaze", (maze) =>
             {
                 Graphics graphics = this.CreateGraphics();
-                TileDrawer tileDrawer = new TileDrawer(graphics, new Point(450, 30), new Size(50, 50));
-                WallDrawer wallDrawer = new WallDrawer(graphics, new Point(450, 30), new Size(50, 50));
+                TileDrawer tileDrawer = new TileDrawer(graphics, new System.Drawing.Point(450, 30), new Size(50, 50));
+                WallDrawer wallDrawer = new WallDrawer(graphics, new System.Drawing.Point(450, 30), new Size(50, 50));
                 List<List<MazeCellDTO>> cells = JsonSerializer.Deserialize<List<List<MazeCellDTO>>>(maze);
                 tileDrawer.DrawTiles(cells);
                 wallDrawer.DrawWalls(cells);
             });
-
         }
 
         private async void CreatePlayerButton_Click(object sender, EventArgs e)
@@ -215,7 +182,7 @@ namespace signalrClient
 
             if (tank.Location.X != x || tank.Location.Y != y)
             {
-                tank.Location = new Point(x, y);
+                tank.Location = new System.Drawing.Point(x, y);
                 OutputBox.Text += $"X:{x}, Y:{y}\n";
                 connection.InvokeAsync("SendCoordinate", username.Text, x, y);
             }
@@ -245,7 +212,7 @@ namespace signalrClient
             tank.Text = user;
             tank.Width = 30;
             tank.Height = 30;
-            tank.Location = new Point(500, 200);
+            tank.Location = new System.Drawing.Point(500, 200);
             tank.Enabled = false;
             this.Controls.Add(tank);
             tanks.Add(user, tank);
@@ -259,9 +226,8 @@ namespace signalrClient
             bullet.Text = user;
             bullet.Width = 10;
             bullet.Height = 10;
-            bullet.Location = new Point(x, y);
+            bullet.Location = new System.Drawing.Point(x, y);
             bullet.Enabled = false;
-            this.Invalidate();
         }
 
         private async void GenerateMaze_Click(object sender, EventArgs e)
@@ -269,7 +235,7 @@ namespace signalrClient
             this.Invalidate();
             await connection.InvokeAsync("CreateMaze");
         }
-        
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
