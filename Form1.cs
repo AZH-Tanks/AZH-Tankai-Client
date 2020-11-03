@@ -11,6 +11,7 @@ using System.Windows;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Drawing.Drawing2D;
 using System.Threading;
+using System.Linq;
 
 namespace signalrClient
 {
