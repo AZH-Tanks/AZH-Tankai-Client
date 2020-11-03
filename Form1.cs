@@ -1,23 +1,22 @@
-﻿using System;
+﻿using AZH_Tankai_Client.Modules.Maze;
+using AZH_Tankai_Shared;
+using Microsoft.AspNetCore.SignalR.Client;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows;
-using Microsoft.AspNetCore.SignalR.Client;
 
 namespace signalrClient
 {
+    // TODO: Rename Form1, Codesplitting.
     public partial class Form1 : Form
     {
         readonly IDictionary<string, Button> tanks = new Dictionary<string, Button>();
         const int speed = 15;
         string currentUser = null;
-        HubConnection connection;
+        readonly HubConnection connection;
         public Form1()
         {
             InitializeComponent();
@@ -27,6 +26,7 @@ namespace signalrClient
 
             connection = new HubConnectionBuilder()
               .WithUrl("https://azh-tanks.azurewebsites.net/ControlHub")
+              //.WithUrl("https://localhost:44308/ControlHub")
               .Build();
 
             connection.Closed += async (error) =>
@@ -84,6 +84,16 @@ namespace signalrClient
                     tanks.Remove(user);
 
                 }));
+            });
+
+            connection.On<string>("ReceiveMaze", (maze) =>
+            {
+                Graphics graphics = this.CreateGraphics();
+                TileDrawer tileDrawer = new TileDrawer(graphics, new Point(450, 30), new Size(50, 50));
+                WallDrawer wallDrawer = new WallDrawer(graphics, new Point(450, 30), new Size(50, 50));
+                List<List<MazeCellDTO>> cells = JsonSerializer.Deserialize<List<List<MazeCellDTO>>>(maze);
+                tileDrawer.DrawTiles(cells);
+                wallDrawer.DrawWalls(cells);
             });
 
         }
@@ -144,6 +154,11 @@ namespace signalrClient
             tanks.Add(user, tank);
         }
 
+        private async void GenerateMaze_Click(object sender, EventArgs e)
+        {
+            this.Invalidate();
+            await connection.InvokeAsync("CreateMaze");
+        }
     }
 
 }
