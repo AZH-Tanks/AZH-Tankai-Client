@@ -102,7 +102,11 @@ namespace signalrClient
                 Graphics graphics = this.CreateGraphics();
                 PowerUpDrawer powerUpDrawer = new PowerUpDrawer(graphics, new Point(450, 30), new Size(50, 50), new Size(30, 30));
                 powerUpDrawer.DrawPowerUp(JsonSerializer.Deserialize<PowerUpDTO>(powerUp));
-                OutputBox.Text += $"PowerUp {powerUp} generated\n";
+            });
+
+            connection.On<string>("PowerUpStrategy", (strategy) =>
+            {
+                OutputBox.Text += $"PowerUp strategy is {strategy}\n";
             });
 
         }
@@ -167,6 +171,7 @@ namespace signalrClient
         {
             this.Invalidate();
             await connection.InvokeAsync("CreateMaze");
+            await connection.InvokeAsync("StopPowerUpGeneration");
             await connection.InvokeAsync("GeneratePowerUps");
         }
     }
