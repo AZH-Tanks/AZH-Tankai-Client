@@ -105,7 +105,7 @@ namespace signalrClient
             connection.On<string>("ReceivePowerUp", (powerUp) =>
             {
                 Graphics graphics = this.CreateGraphics();
-                PowerUpDrawer powerUpDrawer = new PowerUpDrawer(graphics, new Point(450, 30), new Size(50, 50), new Size(30, 30));
+                PowerUpDrawer powerUpDrawer = new PowerUpDrawer(window.Drawer, new Point(5, 5), new Size(30, 30), new Size(20, 20));
                 powerUpDrawer.DrawPowerUp(JsonSerializer.Deserialize<PowerUpDTO>(powerUp));
             });
 

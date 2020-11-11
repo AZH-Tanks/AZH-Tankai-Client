@@ -1,4 +1,5 @@
 ﻿using AZH_Tankai_Shared;
+using GameView;
 using System.Collections.Generic;
 using System.Drawing;
 
@@ -21,11 +22,11 @@ namespace AZH_Tankai_Client.Modules.PowerUp
         public Size TileSize { get; set; }
         public Size PowerUpSize { get; set; }
 
-        private readonly Graphics graphics;
+        private readonly Drawer drawer;
 
-        public PowerUpDrawer(Graphics graphics, Point topLeftCorner, Size tileSize, Size powerUpSize)
+        public PowerUpDrawer(Drawer drawer, Point topLeftCorner, Size tileSize, Size powerUpSize)
         {
-            this.graphics = graphics;
+            this.drawer = drawer;
             TopLeftCorner = topLeftCorner;
             TileSize = tileSize;
             PowerUpSize = powerUpSize;
@@ -33,17 +34,15 @@ namespace AZH_Tankai_Client.Modules.PowerUp
 
         public void DrawPowerUp(PowerUpDTO powerUp)
         {
-            var rectangle = new Rectangle(TopLeftCorner.X + powerUp.Location.X * TileSize.Width + 10, TopLeftCorner.Y + powerUp.Location.Y * TileSize.Height + 10, PowerUpSize.Width, PowerUpSize.Height);
-            
-            var stringFormat = new StringFormat();
-            stringFormat.Alignment = StringAlignment.Center;
-            stringFormat.LineAlignment = StringAlignment.Center;
-
-            graphics.FillRectangle(
-                new System.Drawing.SolidBrush(System.Drawing.Color.White),
-                rectangle
+            drawer.DrawText(
+                $"PowerUpX{powerUp.Location.X}Y{powerUp.Location.Y}",
+                powerUpDictionary[powerUp.Type],
+                TopLeftCorner.X + powerUp.Location.X * TileSize.Width + (TileSize.Width - PowerUpSize.Width) / 2,
+                TopLeftCorner.Y + powerUp.Location.Y * TileSize.Height + (TileSize.Height - PowerUpSize.Height) / 2,
+                PowerUpSize.Width,
+                PowerUpSize.Height,
+                5
             );
-            graphics.DrawString(powerUpDictionary[powerUp.Type], new Font("Arial", 14), Brushes.Black, rectangle, stringFormat);
         }
     }
 }
