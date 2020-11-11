@@ -69,7 +69,46 @@ namespace GameView
             canvas.Children.Add(rectangle);
             Canvas.SetLeft(rectangle, x);
             Canvas.SetTop(rectangle, y);
-            Canvas.SetZIndex(rectangle, zIndex);
+            Panel.SetZIndex(rectangle, zIndex);
+        }
+
+        public void DrawText(string id, string text, double x, double y, double width, double height, int zIndex)
+        {
+            TextBlock textBlock = new TextBlock
+            {
+                Name = id,
+                Text = text,
+                TextAlignment = TextAlignment.Center,
+                Width = width,
+                Height = height,
+                Background = Brushes.AntiqueWhite,
+                Foreground = Brushes.Navy,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            canvas.Children.Add(textBlock);
+            Canvas.SetLeft(textBlock, x);
+            Canvas.SetTop(textBlock, y);
+            Panel.SetZIndex(textBlock, zIndex);
+        }
+
+        public void DrawEllipse(string id, double x, double y, double width, double height, int zIndex)
+        {
+            Ellipse ellipse = new Ellipse
+            {
+                Name = id,
+                Width = width,
+                Height = height,
+                Stroke = Brushes.Black,
+                Fill = Brushes.Black,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            // canvas.RegisterName(id, ellipse);
+            canvas.Children.Add(ellipse);
+            Canvas.SetLeft(ellipse, x);
+            Canvas.SetTop(ellipse, y);
+            Panel.SetZIndex(ellipse, zIndex);
         }
 
         public void MoveObject(string id, double newX, double newY, double transitionDuration)
@@ -102,26 +141,24 @@ namespace GameView
                 Storyboard.SetTargetProperty(animationY, new PropertyPath(Canvas.TopProperty));
 
                 story.Begin(canvas);
-
-                //UIElement target = targetObject as UIElement;
-                //double oldX = Canvas.GetLeft(target);
-                //double oldY = Canvas.GetTop(target);
-                //TranslateTransform transformation = new TranslateTransform();
-                //target.RenderTransform = transformation;
-                //DoubleAnimation xTransition = new DoubleAnimation(oldX, newX - oldX, TimeSpan.FromMilliseconds(transitionDuration));
-                //xTransition.Completed += delegate
-                //{
-                //    Canvas.SetLeft(target, newX);
-                //};
-                //DoubleAnimation yTransition = new DoubleAnimation(oldY, newY - oldY, TimeSpan.FromSeconds(transitionDuration));
-                //yTransition.Completed += delegate
-                //{
-                //    Canvas.SetTop(target, newY);
-                //};
-                //transformation.BeginAnimation(TranslateTransform.XProperty, xTransition);
-                //transformation.BeginAnimation(TranslateTransform.YProperty, yTransition);
             }
 
+        }
+
+        public void RemoveObjectsByIdPrefix(string idPrefix)
+        {
+            List<FrameworkElement> objectsToRemove = new List<FrameworkElement>();
+            foreach (FrameworkElement uiObject in canvas.Children)
+            {
+                if (uiObject.Name.StartsWith(idPrefix))
+                {
+                    objectsToRemove.Add(uiObject);
+                }
+            }
+            foreach (FrameworkElement objectToRemove in objectsToRemove)
+            {
+                canvas.Children.Remove(objectToRemove);
+            }
         }
     }
 }
