@@ -1,5 +1,6 @@
 ﻿using AZH_Tankai_Client.Modules.Maze;
 using AZH_Tankai_Shared;
+using GameView;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ using System.Drawing;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.Integration;
 
 namespace signalrClient
 {
@@ -17,9 +19,12 @@ namespace signalrClient
         const int speed = 15;
         string currentUser = null;
         readonly HubConnection connection;
+        Window1 window;
+        TestDrawer test;
         public Form1()
         {
             InitializeComponent();
+            // TestDrawer testDrawer = new TestDrawer(this);
 
             this.KeyDown += Form1_KeyDown;
             this.KeyPreview = true;
@@ -89,8 +94,8 @@ namespace signalrClient
             connection.On<string>("ReceiveMaze", (maze) =>
             {
                 Graphics graphics = this.CreateGraphics();
-                TileDrawer tileDrawer = new TileDrawer(graphics, new Point(450, 30), new Size(50, 50));
-                WallDrawer wallDrawer = new WallDrawer(graphics, new Point(450, 30), new Size(50, 50));
+                TileDrawer tileDrawer = new TileDrawer(window.Drawer, new Point(5, 5), new Size(30, 30));
+                WallDrawer wallDrawer = new WallDrawer(window.Drawer, new Point(5, 5), new Size(30, 30));
                 List<List<MazeCellDTO>> cells = JsonSerializer.Deserialize<List<List<MazeCellDTO>>>(maze);
                 tileDrawer.DrawTiles(cells);
                 wallDrawer.DrawWalls(cells);
@@ -158,6 +163,14 @@ namespace signalrClient
         {
             this.Invalidate();
             await connection.InvokeAsync("CreateMaze");
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            window = new Window1();
+            ElementHost.EnableModelessKeyboardInterop(window);
+            window.Show();
+            test = new TestDrawer(window.Drawer, this);
         }
     }
 
