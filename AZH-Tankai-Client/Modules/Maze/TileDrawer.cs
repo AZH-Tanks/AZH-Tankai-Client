@@ -17,12 +17,12 @@ namespace AZH_Tankai_Client.Modules.Maze
             { TileType.StoneRoadTile, "Images/StoneRoad.png" }
         };
 
-        public Point TopLeftCorner { get; set; }
+        public System.Drawing.Point TopLeftCorner { get; set; }
         public Size TileSize { get; set; }
 
         private readonly Drawer drawer;
 
-        public TileDrawer(Drawer drawer, Point topLeftCorner, Size tileSize)
+        public TileDrawer(Drawer drawer, System.Drawing.Point topLeftCorner, Size tileSize)
         {
             this.drawer = drawer;
             TopLeftCorner = topLeftCorner;

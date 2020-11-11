@@ -18,13 +18,13 @@ namespace AZH_Tankai_Client.Modules.PowerUp
             { PowerUpType.SpeedUpgrade, "S" }
         };
 
-        public Point TopLeftCorner { get; set; }
+        public System.Drawing.Point TopLeftCorner { get; set; }
         public Size TileSize { get; set; }
         public Size PowerUpSize { get; set; }
 
         private readonly Drawer drawer;
 
-        public PowerUpDrawer(Drawer drawer, Point topLeftCorner, Size tileSize, Size powerUpSize)
+        public PowerUpDrawer(Drawer drawer, System.Drawing.Point topLeftCorner, Size tileSize, Size powerUpSize)
         {
             this.drawer = drawer;
             TopLeftCorner = topLeftCorner;

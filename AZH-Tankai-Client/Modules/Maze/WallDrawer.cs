@@ -16,10 +16,10 @@ namespace AZH_Tankai_Client.Modules.Maze
     class WallDrawer
     {
         private readonly Drawer drawer;
-        public Point TopLeftCorner { get; set; }
+        public System.Drawing.Point TopLeftCorner { get; set; }
         public Size TileSize { get; set; }
 
-        public WallDrawer(Drawer drawer, Point topLeftCorner, Size tileSize)
+        public WallDrawer(Drawer drawer, System.Drawing.Point topLeftCorner, Size tileSize)
         {
             this.drawer = drawer;
             TopLeftCorner = topLeftCorner;
