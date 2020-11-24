@@ -23,6 +23,9 @@ using Rectangle = System.Drawing.Rectangle;
 using PointF = System.Drawing.PointF;
 using AZH_Tankai_Client.Modules;
 using System.Runtime.CompilerServices;
+// which one is the one? :)
+using Point = System.Windows.Point;
+//using Point = AZH_Tankai_Client.Shared.Point;
 
 namespace signalrClient
 {
