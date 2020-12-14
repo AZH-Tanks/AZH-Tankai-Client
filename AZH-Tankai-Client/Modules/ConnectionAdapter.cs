@@ -2,17 +2,9 @@
 using signalrClient;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using AZH_Tankai_Client.Shared;
-using Size = System.Drawing.Size;
-using Graphics = System.Drawing.Graphics;
-using Color = System.Drawing.Color;
-using Pen = System.Drawing.Pen;
-using SolidBrush = System.Drawing.SolidBrush;
-using Rectangle = System.Drawing.Rectangle;
-using PointF = System.Drawing.PointF;
-using AZH_Tankai_Client.Modules;
+using System.Drawing;
 using AZH_Tankai_Client.Modules.Maze;
+using AZH_Tankai_Client.Modules.Bullet;
 using System.Text.Json;
 using AZH_Tankai_Shared;
 
@@ -33,10 +25,11 @@ namespace AZH_Tankai_Client.Modules
         {
             connection.On<string>("ReceiveMaze", (maze) =>
             {
-                Graphics graphics = form.CreateGraphics();
-                TileDrawer tileDrawer = new TileDrawer(graphics, new System.Drawing.Point(450, 30), new Size(50, 50));
-                WallDrawer wallDrawer = new WallDrawer(graphics, new System.Drawing.Point(450, 30), new Size(50, 50));
+                TileDrawer tileDrawer = new TileDrawer(form.Window.Drawer, new Point(5, 5), new Size(40, 40));
+                WallDrawer wallDrawer = new WallDrawer(form.Window.Drawer, new Point(5, 5), new Size(40, 40));
                 List<List<MazeCellDTO>> cells = JsonSerializer.Deserialize<List<List<MazeCellDTO>>>(maze);
+                form.Window.Width = cells[0].Count * 40 + 50;
+                form.Window.Height = cells.Count * 40 + 50;
                 tileDrawer.DrawTiles(cells);
                 wallDrawer.DrawWalls(cells);
             });
@@ -67,13 +60,11 @@ namespace AZH_Tankai_Client.Modules
 
         public void ReceiveBulletCoordinates()
         {
+            BulletDrawer bulletDrawer = new BulletDrawer(form.Window.Drawer);
             connection.On<string>("ReceiveBulletCoordinates", (bulletList) =>
             {
-                form.BeginInvoke((Action)(() =>
-                {
-                    List<Bullet> list = JsonSerializer.Deserialize<List<Bullet>>(bulletList);
-                    form.UpdateBullets(list);
-                }));
+                List<BulletDTO> list = JsonSerializer.Deserialize<List<BulletDTO>>(bulletList);
+                bulletDrawer.DrawBullets(list);
             });
         }
 
