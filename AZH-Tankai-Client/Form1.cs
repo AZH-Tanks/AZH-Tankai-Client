@@ -59,8 +59,10 @@ namespace signalrClient
             connectionAdapter.PlayerExists();
             connectionAdapter.TerminatePlayer();
             connectionAdapter.ReceiveMaze();
+            connectionAdapter.ReceivePowerUp();
 
             await connection.InvokeAsync("CreateMaze");
+            await connection.InvokeAsync("GeneratePowerUps");
         }
 
         // TODO: fix tanks.

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using AZH_Tankai_Client.Modules.Maze;
 using AZH_Tankai_Client.Modules.Bullet;
+using AZH_Tankai_Client.Modules.PowerUp;
 using System.Text.Json;
 using AZH_Tankai_Shared;
 
@@ -67,6 +68,16 @@ namespace AZH_Tankai_Client.Modules
                 bulletDrawer.DrawBullets(list);
             });
         }
+
+        public void ReceivePowerUp()
+        {
+            connection.On<string>("ReceivePowerUp", (powerUp) =>
+            {
+                PowerUpDrawer powerUpDrawer = new PowerUpDrawer(form.Window.Drawer, new System.Drawing.Point(5, 5), new Size(40, 40), new Size(25, 25));
+                powerUpDrawer.DrawPowerUp(JsonSerializer.Deserialize<PowerUpDTO>(powerUp));
+            });
+        }
+
 
         public void PlayerExists()
         {
