@@ -6,7 +6,7 @@ using AZH_Tankai_Shared;
 
 namespace AZH_Tankai_Client.Modules.Bullet
 {
-    class BulletDrawer
+    public class BulletDrawer
     {
         private readonly Drawer drawer;
         private Dictionary<string, BulletDTO> bullets;
@@ -19,8 +19,10 @@ namespace AZH_Tankai_Client.Modules.Bullet
 
         public void DrawBullets(List<BulletDTO> bullets)
         {
+            List<string> drawnBullets = new List<string>();
             foreach (BulletDTO bullet in bullets)
             {
+                drawnBullets.Add(bullet.Id);
                 if (this.bullets.ContainsKey(bullet.Id))
                 {
                     drawer.MoveObject(bullet.Id, bullet.X, bullet.Y, 100);
@@ -61,6 +63,13 @@ namespace AZH_Tankai_Client.Modules.Bullet
                                 15
                             );
                             break;
+                    }
+                }
+                foreach (string bulletId in this.bullets.Keys)
+                {
+                    if (!drawnBullets.Contains(bulletId))
+                    {
+                        drawer.RemoveObject(bulletId);
                     }
                 }
             }

@@ -25,5 +25,10 @@ namespace GameView
             this.Content = canvas;
             Drawer = new Drawer(canvas);
         }
+
+        public void AddKeyDownHandler(Action<object, KeyEventArgs> handler)
+        {
+            this.KeyDown += new KeyEventHandler(handler);
+        }
     }
 }

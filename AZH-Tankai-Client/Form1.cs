@@ -16,15 +16,15 @@ namespace signalrClient
     {
         readonly IDictionary<string, Button> tanks = new Dictionary<string, Button>();
         private ConnectionAdapter connectionAdapter;
-        const int speed = 15;
+        const int speed = 3;
         string currentUser = null;
         readonly HubConnection connection;
         public Window1 Window { get; private set; }
-        public Form1()
+        public Form1(string userName)
         {
             InitializeComponent();
             // TestDrawer testDrawer = new TestDrawer(this);
-
+            currentUser = $"THE{userName}";
             this.KeyPreview = true;
 
             connection = new HubConnectionBuilder()
@@ -52,6 +52,7 @@ namespace signalrClient
             Window = new Window1();
             ElementHost.EnableModelessKeyboardInterop(Window);
             Window.Show();
+            Window.AddKeyDownHandler(HandleKeyDownWPF);
 
             connectionAdapter.ReceivePlayer();
             connectionAdapter.ReceiveCoordinate();
@@ -63,6 +64,8 @@ namespace signalrClient
 
             await connection.InvokeAsync("CreateMaze");
             await connection.InvokeAsync("GeneratePowerUps");
+            await connection.InvokeAsync("SendPlayer", this.currentUser, connection.ConnectionId);
+            this.Hide();
         }
 
         // TODO: fix tanks.
@@ -103,6 +106,15 @@ namespace signalrClient
             }
         }
 
+        private void HandleKeyDownWPF(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (currentUser != null)
+            {
+                HandleMovementWPF(sender, e);
+                HandleFiringWPF(sender, e);
+            }
+        }
+
         private void HandleMovement(object sender, KeyEventArgs e)
         {
             Button tank = tanks[currentUser];
@@ -130,7 +142,56 @@ namespace signalrClient
             {
                 tank.Location = new System.Drawing.Point(x, y);
                 OutputBox.Text += $"X:{x}, Y:{y}\n";
-                connection.InvokeAsync("SendCoordinate", username.Text, x, y);
+                connection.InvokeAsync("SendCoordinate", currentUser, x, y);
+            }
+        }
+
+        private void HandleMovementWPF(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            Button tank = tanks[currentUser];
+            int x = tank.Location.X;
+            int y = tank.Location.Y;
+
+            int oldX = x;
+            int oldY = y;
+
+            if (e.Key == System.Windows.Input.Key.D || e.Key == System.Windows.Input.Key.Right)
+            {
+                x += speed;
+            }
+            else if (e.Key == System.Windows.Input.Key.A || e.Key == System.Windows.Input.Key.Left)
+            {
+                x -= speed;
+            }
+            else if (e.Key == System.Windows.Input.Key.W || e.Key == System.Windows.Input.Key.Up)
+            {
+                y -= speed;
+            }
+            else if (e.Key == System.Windows.Input.Key.S || e.Key == System.Windows.Input.Key.Down)
+            {
+                y += speed;
+            }
+
+            if (tank.Location.X != x || tank.Location.Y != y)
+            {
+                OutputBox.Text += $"X:{x}, Y:{y}\n";
+                connection.InvokeAsync("SendCoordinate", currentUser, x, y, oldX, oldY);
+            }
+        }
+
+        private void HandleFiringWPF(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Space || e.Key == System.Windows.Input.Key.F)
+            {
+                Button tank = tanks[currentUser];
+                int x = tank.Location.X;
+                int y = tank.Location.Y;
+
+                var random = new Random();
+                var list = new List<string> { "Basic", "Laser", "Shrapnel" };
+                int index = random.Next(list.Count);
+
+                connection.InvokeAsync("SendFireBullet", currentUser, list[index], x, y);
             }
         }
 
@@ -146,7 +207,7 @@ namespace signalrClient
                 var list = new List<string> { "Basic", "Laser", "Shrapnel" };
                 int index = random.Next(list.Count);
 
-                connection.InvokeAsync("SendFireBullet", username.Text, list[index], x, y);
+                connection.InvokeAsync("SendFireBullet", currentUser, list[index], x, y);
             }
         }
 
@@ -158,7 +219,7 @@ namespace signalrClient
             tank.Text = user;
             tank.Width = 30;
             tank.Height = 30;
-            tank.Location = new System.Drawing.Point(500, 200);
+            tank.Location = new System.Drawing.Point(20, 20);
             tank.Enabled = false;
             this.Controls.Add(tank);
             tanks.Add(user, tank);

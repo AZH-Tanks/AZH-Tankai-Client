@@ -67,7 +67,7 @@ namespace AZH_Tankai_Client.Forms
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Form1 form1 = new Form1();
+            Form1 form1 = new Form1(LoginForm.name);
             form1.Show();
         }
     }

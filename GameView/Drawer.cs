@@ -111,6 +111,18 @@ namespace GameView
             Panel.SetZIndex(ellipse, zIndex);
         }
 
+        public void RemoveObject(string id)
+        {
+            foreach (FrameworkElement uiObject in canvas.Children)
+            {
+                if (uiObject.Name == id)
+                {
+                    canvas.Children.Remove(uiObject);
+                    return;
+                }
+            }
+        }
+
         // TODO: fix moving lines.
         public void MoveObject(string id, double newX, double newY, double transitionDuration)
         {

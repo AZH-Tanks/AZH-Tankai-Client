@@ -43,6 +43,7 @@ namespace AZH_Tankai_Client.Modules
                 form.BeginInvoke((Action)(() =>
                 {
                     form.CreatePlayer(user);
+                    form.Window.Drawer.DrawRectangle(user, 20, 20, 10, 10, 30);
                 }));
             });
         }
@@ -55,6 +56,7 @@ namespace AZH_Tankai_Client.Modules
                 form.BeginInvoke((Action)(() =>
                 {
                     form.CreateTank(user, x, y);
+                    form.Window.Drawer.MoveObject(user, x, y, 50);
                 }));
             });
         }
