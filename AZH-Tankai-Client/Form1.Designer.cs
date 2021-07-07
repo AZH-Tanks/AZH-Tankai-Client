@@ -32,13 +32,14 @@
             this.username = new System.Windows.Forms.TextBox();
             this.CreatePlayerButton = new System.Windows.Forms.Button();
             this.GenerateMaze = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // OutputBox
             // 
             this.OutputBox.BackColor = System.Drawing.Color.White;
             this.OutputBox.ForeColor = System.Drawing.SystemColors.WindowText;
-            this.OutputBox.Location = new System.Drawing.Point(12, 101);
+            this.OutputBox.Location = new System.Drawing.Point(12, 148);
             this.OutputBox.Name = "OutputBox";
             this.OutputBox.ReadOnly = true;
             this.OutputBox.Size = new System.Drawing.Size(401, 485);
@@ -74,11 +75,22 @@
             this.GenerateMaze.UseVisualStyleBackColor = true;
             this.GenerateMaze.Click += new System.EventHandler(this.GenerateMaze_Click);
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(12, 95);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(306, 26);
+            this.button1.TabIndex = 13;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1184, 600);
+            this.ClientSize = new System.Drawing.Size(1427, 608);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.GenerateMaze);
             this.Controls.Add(this.CreatePlayerButton);
             this.Controls.Add(this.username);
@@ -98,6 +110,7 @@
         private System.Windows.Forms.TextBox username;
         private System.Windows.Forms.Button CreatePlayerButton;
         private System.Windows.Forms.Button GenerateMaze;
+        private System.Windows.Forms.Button button1;
     }
 }
 

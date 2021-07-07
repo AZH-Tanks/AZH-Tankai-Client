@@ -1,4 +1,5 @@
 ﻿using AZH_Tankai_Shared;
+using GameView;
 using System.Collections.Generic;
 using System.Drawing;
 
@@ -19,19 +20,18 @@ namespace AZH_Tankai_Client.Modules.Maze
         public Point TopLeftCorner { get; set; }
         public Size TileSize { get; set; }
 
-        private readonly Graphics graphics;
+        private readonly Drawer drawer;
 
-        public TileDrawer(Graphics graphics, Point topLeftCorner, Size tileSize)
+        public TileDrawer(Drawer drawer, Point topLeftCorner, Size tileSize)
         {
-            this.graphics = graphics;
+            this.drawer = drawer;
             TopLeftCorner = topLeftCorner;
             TileSize = tileSize;
         }
 
         public void DrawTile(MazeCellDTO cell, int x, int y)
         {
-            Image image = Image.FromFile(tileDictionary[cell.TileType]);
-            graphics.DrawImage(image, TopLeftCorner.X + x * TileSize.Width, TopLeftCorner.Y + y * TileSize.Height, TileSize.Width, TileSize.Height);
+            drawer.DrawImage(tileDictionary[cell.TileType], $"MazeTileX{x}Y{y}", TileSize.Width, TileSize.Height, TopLeftCorner.X + x * TileSize.Width, TopLeftCorner.Y + y * TileSize.Height);
         }
 
         public void DrawTiles(List<List<MazeCellDTO>> tiles)
